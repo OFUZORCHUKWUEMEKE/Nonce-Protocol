@@ -15,6 +15,7 @@ pub struct SavingsAccount{
     pub lock_duration:Option<i64>,
     pub created_at:i64,
     pub savings_type:SavingsType,
+    pub is_sol:bool,
     pub total_sol_saved:u64,
     pub total_usdc_saved:u64
 }

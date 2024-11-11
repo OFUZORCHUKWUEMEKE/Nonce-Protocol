@@ -9,7 +9,7 @@ pub struct InitializeSavings<'info> {
     pub signer: Signer<'info>,
     #[account(
         init,
-        seeds=[name.as_bytes().as_ref(),signer.key().as_ref(),description.as_ref(),savings_type.to_bytes()],
+        seeds=[name.as_bytes(),signer.key().as_ref(),description.as_bytes(), savings_type.try_to_vec()?.as_slice()],
         bump,
         payer=signer,
         space=SavingsAccount::INIT_SPACE
@@ -38,6 +38,7 @@ pub fn initialize(
     is_sol: bool,
     sol_amount: Option<u64>,
     usdc_amount: Option<i64>,
+    lock_duration: Option<i64>,
 ) -> Result<()> {
     let savings_account = &mut ctx.accounts.savings_account;
     savings_account.name = name;
@@ -45,9 +46,32 @@ pub fn initialize(
     savings_account.savings_type = savings_type;
     savings_account.is_sol = is_sol;
     savings_account.owner = ctx.accounts.owner.key();
-    savings_account.bump = ctx.bumps.accounts.savings_account;
-    savings_account.created_at = Clock::get()?;
-    savings_account.sol_amount = sol_amount;
-    savings_account.usdc_amount = usdc_amount;
-    savings_account.bump = ctx.bumps.get("savings_account").unwrap()
+    savings_account.bump = *ctx.bumps.get("savings_account").unwrap();
+    savings_account.created_at = Clock::get()?.unix_timestamp;
+    savings_account.sol_amount = Some(
+        savings_account
+            .sol_amount
+            .unwrap_or(0) // If None, use 0
+            .checked_add(sol_amount.unwrap_or(0)) // Safe addition
+            .ok_or(NonceSavingsError::Overflow)?, // Handle overflow
+    );
+    savings_account.usdc_amount = Some(
+        savings_account
+            .usdc_amount
+            .unwrap_or(0)
+            .checked_add(usdc_amount.unwrap_or(0))
+            .ok_or(NonceSavingsError::Overflow)?,
+    );
+    savings_account.total_sol_saved = Some(
+        savings_account
+            .total_sol_saved
+            .unwrap_or(0)
+            .checked_add(total_sol_saved.unwrap_or(0))
+            .ok_or(NonceSavingsError::Overflow),
+    );
+    savings_account.total_usdc_saved = 0;
+    match lock_duration{
+        Some(duration) =>savings_account.lock_duration = Some(duration),
+        None => savings_account.lock_duration = None
+    }
 }
