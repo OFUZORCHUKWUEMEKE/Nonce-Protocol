@@ -49,28 +49,7 @@ pub struct InitializeSavings<'info> {
         space=SavingsAccount::INIT_SPACE
     )]
     pub savings_account: Account<'info, SavingsAccount>,
-    // #[account(
-    //     mut,
-        // constraint = if !is_sol{
-        //     let ata = get_associated_token_address(&signer.key(),&usdc_mint.as_ref().unwrap().key());
-        //     token_account.key() == ata
-        // }else{
-        //     true
-        // }
-    // )]
-    // pub token_account: Option<Interface<'info, TokenInterface>>,
-    // #[account(
-    //     init,
-    //     token::mint = usdc_mint,
-    //     token::authority=savings_account,
-    //     payer=signer,
-    //     seeds=[b"token_account",name.as_bytes(),signer.key().as_ref(),description.as_bytes(), savings_type.try_to_vec()?.as_slice()],
-    //     bump
-    // )]
-    // pub user_usdc_savings_account: InterfaceAccount<'info, token_interface::TokenAccount>,
-    // pub usdc_mint: Option<InterfaceAccount<'info, Mint>>,
     pub token_program: Interface<'info, token_interface::TokenInterface>,
-    // pub associated_token_program: Interface<'info, token_interface::TokenInterface>,
     pub system_program: Program<'info, System>,
 }
 
@@ -81,6 +60,7 @@ pub fn initialize(
     savings_type: SavingsType,
     is_sol: bool,
     amount: u64,
+    bump:&InitializeSavingsBumps,
     lock_duration: Option<i64>,
 ) -> Result<()> {
     let savings_account = &mut ctx.accounts.savings_account;
@@ -89,7 +69,7 @@ pub fn initialize(
     savings_account.savings_type = savings_type;
     savings_account.is_sol = is_sol;
     savings_account.owner = ctx.accounts.signer.key();
-    savings_account.bump = ctx.bumps.savings_account;
+    savings_account.bump = bump.savings_account;
     savings_account.created_at = Clock::get()?.unix_timestamp;
     if savings_account.amount > 0 {
        let new = savings_account.amount.checked_add(amount);
