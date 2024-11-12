@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
 #[error_code]
-pub enum NonceErrror{
+pub enum NonceError{
     #[msg("Savings account is inactive")]
     SavingsInactive,
     #[msg("Funds are still Locked")]
@@ -9,5 +9,7 @@ pub enum NonceErrror{
     #[msg("Unauthorized access to savings Account")]
     Unauthorized,
     #[msg("Insufficient Funds")]
-    InsufficientFunds
+    InsufficientFunds,
+    #[msg("Mathematical Overflow")]
+    Overflow
 }
