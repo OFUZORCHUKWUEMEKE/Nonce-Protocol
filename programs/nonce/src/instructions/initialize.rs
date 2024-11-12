@@ -90,3 +90,9 @@ pub fn initialize(
     }
     Ok(())
 }
+
+pub fn initialize_protocol(ctx:Context<InitProtocolVault>)->Result<()>{
+    let protocol_vault = &mut ctx.accounts.protocol_sol_vault;
+    
+    Ok(())
+}
