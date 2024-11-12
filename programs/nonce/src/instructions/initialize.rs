@@ -1,7 +1,7 @@
 use crate::{
     constants::*,
     errors::*,
-    state::{ProtocolVault, SavingsAccount, SavingsType},
+    state::{ProtocolVault, SavingsAccount, SavingsType}
 };
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{Mint, TokenInterface};
@@ -22,7 +22,7 @@ pub struct InitProtocolVault<'info> {
     pub protocol_sol_vault: Account<'info, ProtocolVault>,
     #[account(
         init,
-        seeds=[b"AUTH"],
+        seeds=[b"protocol"],
         bump,
         payer=payer,
         token::mint = mint,
@@ -46,7 +46,7 @@ pub struct InitializeSavings<'info> {
         seeds=[name.as_bytes(),signer.key().as_ref(),description.as_bytes(), savings_type.try_to_vec()?.as_slice()],
         bump,
         payer=signer,
-        space=SavingsAccount::INIT_SPACE
+        space=DISCRIMINATOR + SavingsAccount::INIT_SPACE
     )]
     pub savings_account: Account<'info, SavingsAccount>,
     pub token_program: Interface<'info, token_interface::TokenInterface>,
@@ -62,6 +62,7 @@ pub fn initialize(
     amount: u64,
     bump:&InitializeSavingsBumps,
     lock_duration: Option<i64>,
+    unlock_price:Option<u64>
 ) -> Result<()> {
     let savings_account = &mut ctx.accounts.savings_account;
     savings_account.name = name;
@@ -81,6 +82,11 @@ pub fn initialize(
         savings_account.lock_duration = lock_duration.unwrap();
     }else{
         savings_account.lock_duration = 0
+    }
+    if unlock_price.is_some(){
+        savings_account.unlock_price = unlock_price.unwrap();
+    }else{
+        savings_account.unlock_price = 0;
     }
     Ok(())
 }

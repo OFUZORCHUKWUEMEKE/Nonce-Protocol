@@ -11,5 +11,7 @@ pub enum NonceError{
     #[msg("Insufficient Funds")]
     InsufficientFunds,
     #[msg("Mathematical Overflow")]
-    Overflow
+    Overflow,
+    #[msg("USD Price not yet reached")]
+    PriceNotReached
 }

@@ -10,6 +10,8 @@ use anchor_spl::{
     token_interface::{self, Mint, TokenAccount, TokenInterface, TransferChecked},
 };
 
+
+
 #[derive(Accounts)]
 #[instruction(name:String,description:String,savings_type:SavingsType,is_sol:bool)]
 pub struct Deposit<'info> {
@@ -37,14 +39,14 @@ pub struct Deposit<'info> {
         token::authority = protocol_sol_vault,
     )]
     pub protocol_usdc_vault: InterfaceAccount<'info, token_interface::TokenAccount>,
-    pub usdc_mint: Option<InterfaceAccount<'info, Mint>>,
+    // pub usdc_mint: InterfaceAccount<'info, Mint>,
     #[account(
         init_if_needed,
         payer = signer,
-        associated_token::mint = usdc_mint,
+        associated_token::mint = mint,
         associated_token::authority = signer,
         constraint = if !is_sol{
-            let ata = get_associated_token_address(&signer.key(),&usdc_mint.as_ref().unwrap().key());
+            let ata = get_associated_token_address(&signer.key(),&mint.key());
             user_ata.key() == ata
         }else{
             true

@@ -26,6 +26,7 @@ pub struct SavingsAccount{
     pub created_at:i64,
     pub savings_type:SavingsType,
     pub is_sol:bool,
+    pub unlock_price:u64
 }
 
 #[derive(AnchorDeserialize,AnchorSerialize,PartialEq,Eq,Clone)]
