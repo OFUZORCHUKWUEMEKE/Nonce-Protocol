@@ -59,7 +59,12 @@ pub struct Withdraw<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn withdraw(ctx: Context<Withdraw>, amount: u64, unlock_price: Option<u64>,lock_duration:Option<i64>) -> Result<()> {
+pub fn withdraw(
+    ctx: Context<Withdraw>,
+    amount: u64,
+    unlock_price: Option<u64>,
+    lock_duration: Option<i64>,
+) -> Result<()> {
     let savings_account = &mut ctx.accounts.savings_account;
     let price_update = &mut ctx.accounts.price_update;
     // let unlock_price = savings_account
@@ -114,9 +119,9 @@ pub fn withdraw(ctx: Context<Withdraw>, amount: u64, unlock_price: Option<u64>,l
             }
         }
         _ => {
-            if savings_account.is_sol == true{
+            if savings_account.is_sol == true {
                 let current_timestamp = Clock::get()?.unix_timestamp;
-                if current_timestamp >= savings_account.created_at + lock_duration.unwrap(){
+                if current_timestamp >= savings_account.created_at + lock_duration.unwrap() {
                     let signer_seeds: &[&[&[u8]]] =
                         &[&[b"protocol", &[ctx.bumps.protocol_sol_vault]]];
                     let cpi_ctx = CpiContext::new(
@@ -128,12 +133,12 @@ pub fn withdraw(ctx: Context<Withdraw>, amount: u64, unlock_price: Option<u64>,l
                     )
                     .with_signer(signer_seeds);
                     anchor_lang::system_program::transfer(cpi_ctx, amount)?;
-                }else{
+                } else {
                     return Err(NonceError::FundsStillLocked.into());
                 }
-            }else{
+            } else {
                 let current_timestamp = Clock::get()?.unix_timestamp;
-                if current_timestamp >= savings_account.created_at + lock_duration.unwrap(){
+                if current_timestamp >= savings_account.created_at + lock_duration.unwrap() {
                     let signer_seeds: &[&[&[u8]]] =
                         &[&[b"protocol", &[ctx.bumps.protocol_sol_vault]]];
                     let cpi_program = ctx.accounts.token_program.to_account_info();
@@ -146,7 +151,7 @@ pub fn withdraw(ctx: Context<Withdraw>, amount: u64, unlock_price: Option<u64>,l
                     };
                     let ctx = CpiContext::new(cpi_program, transfer_accounts);
                     token_interface::transfer_checked(ctx, amount, decimals)?;
-                }else{
+                } else {
                     return Err(NonceError::FundsStillLocked.into());
                 }
             }
