@@ -149,7 +149,7 @@ pub fn withdraw(
                         authority: ctx.accounts.protocol_sol_vault.to_account_info(),
                         mint: ctx.accounts.mint.to_account_info(),
                     };
-                    let ctx = CpiContext::new(cpi_program, transfer_accounts);
+                    let ctx = CpiContext::new(cpi_program, transfer_accounts).with_signer(signer_seeds);
                     token_interface::transfer_checked(ctx, amount, decimals)?;
                 } else {
                     return Err(NonceError::FundsStillLocked.into());
