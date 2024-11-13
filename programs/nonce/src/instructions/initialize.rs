@@ -1,7 +1,7 @@
 use crate::{
     constants::*,
     errors::*,
-    state::{ProtocolVault, SavingsAccount, SavingsType}
+    state::{ProtocolVault, SavingsAccount, SavingsType},
 };
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{Mint, TokenInterface};
@@ -60,9 +60,9 @@ pub fn initialize(
     savings_type: SavingsType,
     is_sol: bool,
     amount: u64,
-    bump:&InitializeSavingsBumps,
+    bump: &InitializeSavingsBumps,
     lock_duration: Option<i64>,
-    unlock_price:Option<u64>
+    unlock_price: Option<u64>,
 ) -> Result<()> {
     let savings_account = &mut ctx.accounts.savings_account;
     savings_account.name = name;
@@ -73,26 +73,30 @@ pub fn initialize(
     savings_account.bump = bump.savings_account;
     savings_account.created_at = Clock::get()?.unix_timestamp;
     if savings_account.amount > 0 {
-       let new = savings_account.amount.checked_add(amount);
-       savings_account.amount = new.unwrap();
-    }else{
+        let new = savings_account.amount.checked_add(amount);
+        savings_account.amount = new.unwrap();
+    } else {
         savings_account.amount = amount;
     }
-    if lock_duration.is_some(){
+    if lock_duration.is_some() {
         savings_account.lock_duration = lock_duration.unwrap();
-    }else{
+    } else {
         savings_account.lock_duration = 0
     }
-    if unlock_price.is_some(){
+    if unlock_price.is_some() {
         savings_account.unlock_price = unlock_price.unwrap();
-    }else{
+    } else {
         savings_account.unlock_price = 0;
     }
     Ok(())
 }
 
-pub fn initialize_protocol(ctx:Context<InitProtocolVault>)->Result<()>{
+pub fn initialize_protocol(ctx: Context<InitProtocolVault>) -> Result<()> {
     let protocol_vault = &mut ctx.accounts.protocol_sol_vault;
-    
+    protocol_vault.authority = ctx.accounts.signer.key();
+    protocol_vault.total_sol_saved = 0;
+    protocol_vault.total_usdc_saved = 0;
+    protocol_vault.last_updated = Clock::get()?.unix_timestamp;
+
     Ok(())
 }
