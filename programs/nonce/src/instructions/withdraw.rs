@@ -7,7 +7,7 @@ use pyth_solana_receiver_sdk::{
     price_update::{get_feed_id_from_hex, PriceUpdateV2},
 };
 use crate::{
-    constants::{MAXIMUM_AGE, SOL_USD_FEED_ID, USDC_USD_FEED_ID},
+    constants::*,
     errors::NonceError,
     state::{ProtocolVault, SavingsAccount, SavingsType},
 };
