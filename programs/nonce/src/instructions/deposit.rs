@@ -10,6 +10,8 @@ use anchor_spl::{
     token_interface::{self, Mint, TokenAccount, TokenInterface, TransferChecked},
 };
 
+// Nice One Bro God will Help You
+
 #[derive(Accounts)]
 #[instruction(name:String,description:String,savings_type:SavingsType,is_sol:bool)]
 pub struct Deposit<'info> {
