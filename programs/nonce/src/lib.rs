@@ -44,7 +44,14 @@ pub mod nonce {
         Ok(())
     }
 
-    pub fn deposit(ctx: Context<Deposit>) -> Result<()> {
+    pub fn deposit(ctx: Context<Deposit>,name: String,description: String,savings_type: SavingsType,is_sol: bool,amount: u64,time_lock:Option<i64>,unlock_price: Option<u64>) -> Result<()> {
+        deposit(ctx,name,description,savings_type,is_sol,amount,time_lock,unlock_price);
         Ok(())
     }
+
+    pub fn withdraw(ctx:Context<Withdraw>,amount: u64,unlock_price: Option<u64>,lock_duration: Option<i64>)->Result<()>{
+        withdraw(ctx, amount, unlock_price, lock_duration);
+        Ok(())
+    }
+
 }

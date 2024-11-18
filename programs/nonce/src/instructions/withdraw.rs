@@ -1,16 +1,14 @@
-use anchor_lang::prelude::*;
-use anchor_spl::{
-    associated_token::{get_associated_token_address, AssociatedToken},
-    token_interface::{self, Mint, TokenAccount, TransferChecked},
-};
-use pyth_solana_receiver_sdk::{
-    price_update::{get_feed_id_from_hex, PriceUpdateV2},
-};
 use crate::{
     constants::*,
     errors::NonceError,
     state::{ProtocolVault, SavingsAccount, SavingsType},
 };
+use anchor_lang::prelude::*;
+use anchor_spl::{
+    associated_token::{get_associated_token_address, AssociatedToken},
+    token_interface::{self, Mint, TokenAccount, TransferChecked},
+};
+use pyth_solana_receiver_sdk::price_update::{get_feed_id_from_hex, PriceUpdateV2};
 
 #[derive(Accounts)]
 #[instruction(name:String,description:String,savings_type:SavingsType,is_sol:bool)]
@@ -147,7 +145,8 @@ pub fn withdraw(
                         authority: ctx.accounts.protocol_sol_vault.to_account_info(),
                         mint: ctx.accounts.mint.to_account_info(),
                     };
-                    let ctx = CpiContext::new(cpi_program, transfer_accounts).with_signer(signer_seeds);
+                    let ctx =
+                        CpiContext::new(cpi_program, transfer_accounts).with_signer(signer_seeds);
                     token_interface::transfer_checked(ctx, amount, decimals)?;
                 } else {
                     return Err(NonceError::FundsStillLocked.into());
