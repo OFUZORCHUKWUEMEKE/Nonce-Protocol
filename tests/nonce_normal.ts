@@ -64,4 +64,8 @@ describe("Nonce", async () => {
         // let decimalAmount = toDecimalAmount(account.amount,6)
         console.log(account);
     })
+
+    it("Initialize Protocol",async()=>{
+        
+    })
 })
