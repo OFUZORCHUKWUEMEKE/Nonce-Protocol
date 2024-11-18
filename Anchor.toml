@@ -5,7 +5,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-nonce = "4XSnD5eXrLPEuvEmN9hieF3ywBKXKPU2hogH7fUKYxmF"
+nonce = "4srKoX2V92mmfDVDGVHzTEw19Tku3uSoBxiER8isVzd7"
 
 [registry]
 url = "https://api.apr.dev"

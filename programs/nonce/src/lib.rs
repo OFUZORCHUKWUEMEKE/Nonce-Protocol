@@ -7,7 +7,7 @@ use anchor_lang::prelude::*;
 use instructions::*;
 use state::*;
 
-declare_id!("4XSnD5eXrLPEuvEmN9hieF3ywBKXKPU2hogH7fUKYxmF");
+declare_id!("4srKoX2V92mmfDVDGVHzTEw19Tku3uSoBxiER8isVzd7");
 
 #[program]
 pub mod nonce {
