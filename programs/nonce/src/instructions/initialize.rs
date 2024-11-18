@@ -60,7 +60,6 @@ pub fn initialize(
     savings_type: SavingsType,
     is_sol: bool,
     amount: u64,
-    bump: &InitializeSavingsBumps,
     lock_duration: Option<i64>,
     unlock_price: Option<u64>,
 ) -> Result<()> {
@@ -70,7 +69,7 @@ pub fn initialize(
     savings_account.savings_type = savings_type;
     savings_account.is_sol = is_sol;
     savings_account.owner = ctx.accounts.signer.key();
-    savings_account.bump = bump.savings_account;
+    savings_account.bump = ctx.bumps.savings_account;
     savings_account.created_at = Clock::get()?.unix_timestamp;
     if savings_account.amount > 0 {
         let new = savings_account.amount.checked_add(amount);
