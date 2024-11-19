@@ -15,6 +15,7 @@ pub struct InitProtocolVault<'info> {
     #[account(
         init,
         payer=payer,
+        has_one=payer,
         space= DISCRIMINATOR + ProtocolVault::INIT_SPACE,
         seeds=[b"protocol"],
         bump
@@ -89,7 +90,7 @@ pub fn initialize(
 
 pub fn initialize_protocols(ctx: Context<InitProtocolVault>) -> Result<()> {
     let protocol_vault = &mut ctx.accounts.protocol_sol_vault;
-    protocol_vault.authority = ctx.accounts.payer.key();
+    protocol_vault.payer = ctx.accounts.payer.key();
     protocol_vault.total_sol_saved = 0;
     protocol_vault.total_usdc_saved = 0;
     protocol_vault.last_updated = Clock::get()?.unix_timestamp;

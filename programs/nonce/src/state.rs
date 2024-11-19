@@ -4,7 +4,7 @@ use anchor_lang::prelude::*;
 #[account]
 #[derive(InitSpace)]
 pub struct ProtocolVault{
-    pub authority:Pubkey,
+    pub payer:Pubkey,
     pub total_sol_saved:u64,
     pub total_usdc_saved:u64,
     pub last_updated:i64,
