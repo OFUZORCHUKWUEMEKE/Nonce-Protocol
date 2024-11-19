@@ -18,26 +18,34 @@ import { assert, expect } from "chai";
 describe("Nonce", async () => {
     const provider = anchor.AnchorProvider.env();
     anchor.setProvider(provider);
+    const program = anchor.workspace.Nonce as Program<Nonce>;
+    let connection = provider.connection;
+
+    // Claude
+    let protocolVault: PublicKey;
+    let protocolUsdcVault: PublicKey;
 
     const Savings = {
         name: "Christmas",
         description: "Happy Christmas",
         savingsType: { timeLockedSavings: {} },
         is_sol: true,
-        amount: 10,
+        amount: 1000,
         lock_duration: 86400,
-        unlock_price: 2000
+        unlock_price: 1000
     }
-    const savingsType = { timeLockedSavings: {} };
-
-    const program = anchor.workspace.Nonce as Program<Nonce>;
-    const user = anchor.web3.Keypair.generate();
 
     // let user: Keypair
     let user_ata: anchor.web3.PublicKey;
     let usdc_mint: anchor.web3.PublicKey;
 
     const wallet = provider.wallet as NodeWallet;
+
+    const [protocolPDA] = PublicKey.findProgramAddressSync(
+        [Buffer.from("protocol")],
+        program.programId
+    );
+    const [savingsPDA] = PublicKey.findProgramAddressSync([Buffer.from(Savings.name), provider.wallet.publicKey.toBuffer(), Buffer.from(Savings.description)], program.programId);
 
     const confirm = async (signature: string): Promise<string> => {
         const block = await provider.connection.getLatestBlockhash();
@@ -56,7 +64,7 @@ describe("Nonce", async () => {
             wallet.payer, wallet.payer.publicKey,
             wallet.payer.publicKey
             , 6);
-        // user = anchor.web3.Keypair.generate();
+
 
         user_ata = (await getOrCreateAssociatedTokenAccount(provider.connection, wallet.payer, usdc_mint, wallet.payer.publicKey)).address;
         console.log("user ata is", user_ata.toBase58());
@@ -70,40 +78,57 @@ describe("Nonce", async () => {
             wallet.publicKey,
             10_000_000_000
         );
-        const account = await getAccount(provider.connection, user_ata);
-        // let decimalAmount = toDecimalAmount(account.amount,6)
-        console.log(account);
+        //     const account = await getAccount(provider.connection, user_ata);
+        //     console.log(account, "airdrop SOL");
     })
 
     it("Initialize Protocol", async () => {
-        const [protocolPDA, protocolBump] = anchor.web3.PublicKey.findProgramAddressSync([Buffer.from("protocol")], program.programId);
-        const tx = program.methods.initializeProtocol().accountsPartial({
-            payer: wallet.payer.publicKey,
-            mint: usdc_mint,
-            tokenProgram: TOKEN_PROGRAM_ID,
-            systemProgram: anchor.web3.SystemProgram.programId
-        });
-        console.log({ protocolPDA: protocolPDA.toBase58(), protocolBump });
+        // Claude
+        const [protocolVaultPda] = PublicKey.findProgramAddressSync(
+            [Buffer.from("protocol")],
+            program.programId
+          );
+          protocolVault = protocolVaultPda;
+      
+          // Find PDA for protocol USDC vault
+          const [protocolUsdcVaultPda] = PublicKey.findProgramAddressSync(
+            [Buffer.from("protocol")],
+            program.programId
+          );
+          protocolUsdcVault = protocolUsdcVaultPda;
+        try {
+            const tx = await program.methods
+                .initializeProtocol()
+                .accounts({
+                    mint: usdc_mint,
+                    payer: provider.publicKey,
+                    protocolSolVault: protocolVault,
+                    protocolUsdcVault: protocolUsdcVault,
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                    systemProgram: SystemProgram.programId,
+                });
+                const account = await program.account.protocolVault.fetch(protocolVault);
+                console.log(account)
+        } catch (error) {
+            console.log(error);
+        }
+
+        // const vaultAccount = await program.account.protocolVault.fetch(protocolPDA);
+        // console.log(vaultAccount);
     })
 
-    it("Initialize Savings", async () => {
-        const [savingsPDA, savingsBump] = anchor.web3.PublicKey.findProgramAddressSync([
-            Buffer.from(Savings.name),
-            provider.wallet.publicKey.toBuffer(),
-            Buffer.from(Savings.description),
-            Buffer.from([0]),
-        ], program
-            .programId
-        )
-        const tx = program.methods.initializeSavings(Savings.name, Savings.description, Savings.savingsType, Savings.is_sol, new BN(Savings.amount), new BN(Savings.lock_duration), new BN(Savings.unlock_price)).accountsPartial({
-            signer: provider.wallet.publicKey,
-            savingsAccount: savingsPDA,
-            tokenProgram: TOKEN_PROGRAM_ID,
-            systemProgram: anchor.web3.SystemProgram.programId
-        })
-        console.log({ pda: savingsPDA.toBase58(), bump: savingsBump });
+    // it("Initialize Savings", async () => {
+    //     try {
+    //         await program.methods.initializeSavings(Savings.name, Savings.description, Savings.savingsType, true, new BN(1000), new BN(86400), new BN(1000)).accountsPartial({
+    //             signer: provider.wallet.publicKey,
+    //             savingsAccount: savingsPDA,
+    //             systemProgram: anchor.web3.SystemProgram.programId,
+    //         })
+    //         const savingsAccount = await program.account.savingsAccount.fetch(savingsPDA);
+    //         console.log(savingsAccount);
+    //     } catch (error) {
+    //         console.log(error)
+    //     }
 
-        
-
-    })
+    // })
 })

@@ -19,7 +19,7 @@ pub struct Deposit<'info> {
     pub signer: Signer<'info>,
     #[account(
         mut,
-        seeds=[name.as_bytes(),signer.key().as_ref(),description.as_bytes(), savings_type.try_to_vec()?.as_slice()],
+        seeds=[name.as_bytes(),signer.key().as_ref(),description.as_bytes()],
         bump= savings_account.bump
     )]
     pub savings_account: Account<'info, SavingsAccount>,

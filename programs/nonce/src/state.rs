@@ -8,6 +8,7 @@ pub struct ProtocolVault{
     pub total_sol_saved:u64,
     pub total_usdc_saved:u64,
     pub last_updated:i64,
+    pub bump:u8
 }
 
 #[account]

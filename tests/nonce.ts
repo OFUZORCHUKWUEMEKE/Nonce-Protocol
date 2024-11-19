@@ -1,118 +1,174 @@
 // import * as anchor from "@coral-xyz/anchor";
 // import { Program } from "@coral-xyz/anchor";
+// import { PublicKey, SystemProgram, Keypair } from "@solana/web3.js";
+// import { TOKEN_PROGRAM_ID, createMint } from "@solana/spl-token";
+// import { assert } from "chai";
 // import { Nonce } from "../target/types/nonce";
-// import { expect } from "chai";
-// import {
-//   AccountInfoBytes,
-//   AddedAccount,
-//   BanksClient,
-//   ProgramTestContext,
-//   startAnchor,
-//   BanksTransactionResultWithMeta
-// } from "solana-bankrun";
-// import { PublicKey, Transaction, Keypair, Connection, clusterApiUrl, TransactionInstruction } from "@solana/web3.js";
-// import {
-//   ACCOUNT_SIZE,
-//   AccountLayout,
-//   createMint,
-//   getAssociatedTokenAddressSync,
-//   getOrCreateAssociatedTokenAccount,
-//   MintLayout,
-//   TOKEN_2022_PROGRAM_ID,
-//   type TOKEN_PROGRAM_ID,
-// } from "@solana/spl-token";
-// import { confirmTransaction, makeKeypairs } from '@solana-developers/helpers';
-// import { BankrunProvider } from "anchor-bankrun";
+// // import { Nonce } from "../target/types/nonce"; // Update with your actual program name
 
-// const IDL = require('../target/idl/nonce.json');
-// const PROGRAM_ID = new PublicKey(IDL.address);
-
-// const PROJECT_DIRECTORY = "";
-// const USDC_DECIMALS = 6;
-
-
-
-// describe("nonce", async () => {
-
-//   const context = await startAnchor('', [{ name: 'nonce', programId: PROGRAM_ID }], []);
-//   const provider = new BankrunProvider(context);
-
-//   const connection = provider.connection;
-//   const program = new anchor.Program<Nonce>(IDL, provider);
-
-//   let usdc_mint: anchor.web3.PublicKey;
-
-//   let user_ata: anchor.web3.PublicKey;
-
-//   const payer = anchor.web3.Keypair.generate();
-
-
-//   const confirm = async (signature: string): Promise<string> => {
-//     const block = await provider.connection.getLatestBlockhash();
-//     await provider.connection.confirmTransaction({
-//       signature,
-//       ...block
-//     })
-//     return signature;
-//   }
-
-//   it("Create user1 and user 2 accounts and the usdc mint and associated accounts for both users", async () => {
-//     const airdrop = await provider.connection.requestAirdrop(payer.publicKey, 20 * anchor.web3.LAMPORTS_PER_SOL).then(confirm);
-//     console.log("\nAirdropped 20 sol to user", airdrop);
-//     usdc_mint = await createMint(provider.connection, payer, usdc_mint, payer.publicKey, 6);
-//     user_ata = (await getOrCreateAssociatedTokenAccount(provider.connection,payer,usdc_mint,payer.publicKey)).address;
-
-//     console.log("user_ata is",user_ata.toBase58());
-//     expect(usdc_mint == typeof(PublicKey))
-
-//   })
-
-
+// describe("savings_program", () => {
+//   const provider = anchor.AnchorProvider.env();
+//   anchor.setProvider(provider);
 
 //   const program = anchor.workspace.Nonce as Program<Nonce>;
+  
+//   // Test accounts
+//   let mint: PublicKey;
+//   let protocolVault: PublicKey;
+//   let protocolUsdcVault: PublicKey;
+//   let payer: Keypair;
 
-//   let context :ProgramTestContext;
-//   let client :BanksClient;
-//   let payer:Keypair;
-//   let provider:BankrunProvider;
-//   let program:Program<Nonce>;
+//   before(async () => {
+//     // Create test mint
+//     payer = Keypair.generate();
+//     await provider.connection.requestAirdrop(
+//       payer.publicKey,
+//       2 * anchor.web3.LAMPORTS_PER_SOL
+//     );
+    
+//     mint = await createMint(
+//       provider.connection,
+//       payer,
+//       payer.publicKey,
+//       null,
+//       6 // 6 decimals for USDC
+//     );
+//   });
 
-//   before(async()=>{
-//   const connection = new Connection(clusterApiUrl("testnet"));
-//   const accountInfo = await connection.getAccountInfo(USDC_MINT_ADDRESS);
-//   const usdcAccount :AddedAccount ={address:USDC_MINT_ADDRESS,info:accountInfo};
+//   describe("init_protocol_vault", () => {
+//     it("initializes protocol vault correctly", async () => {
+//       // Derive PDA for protocol vault
+    //   const [protocolVaultPDA] = PublicKey.findProgramAddressSync(
+    //     [Buffer.from("protocol")],
+    //     program.programId
+    //   );
+//       protocolVault = protocolVaultPDA;
 
-//   context = await startAnchor("", [], [usdcAccount]);
-//   client = context.banksClient;
-//   payer = context.payer;
-//   provider = new BankrunProvider(context);
-//   anchor.setProvider(provider);
-//   program = new Program<Nonce>(IDL, provider)
+//       // Derive PDA for USDC vault
+//       const [protocolUsdcVaultPDA] = PublicKey.findProgramAddressSync(
+//         [Buffer.from("protocol")],
+//         program.programId
+//       );
+//       protocolUsdcVault = protocolUsdcVaultPDA;
 
+//       // Initialize protocol vault
+//       await program.methods
+//         .initializeProtocol()
+//         .accounts({
+//           mint,
+//           payer: payer.publicKey,
+//         //   protocolSolVault: protocolVault,
+//         //   protocolUsdcVault,
+//           tokenProgram: TOKEN_PROGRAM_ID,
+//         //   systemProgram: SystemProgram.programId,
+//         })
+//         .signers([payer])
+//         .rpc();
 
-//   })
+//       // Fetch and verify the initialized vault
+//       const vaultAccount = await program.account.protocolVault.fetch(protocolVault);
+      
+//       assert.equal(vaultAccount.authority.toString(), payer.publicKey.toString());
+//       assert.equal(vaultAccount.totalSolSaved.toNumber(), 0);
+//       assert.equal(vaultAccount.totalUsdcSaved.toNumber(), 0);
+//     //   assert(vaultAccount.lastUpdated > 0);
+//       assert(vaultAccount.bump > 0);
+//     });
+//   });
 
+//   describe("initialize_savings", () => {
+//     it("initializes a time-locked savings account", async () => {
+//       const name = "Test Savings";
+//       const description = "Test Description";
+//       const amount = new anchor.BN(1_000_000); // 1 SOL in lamports
+//       const lockDuration = new anchor.BN(7 * 24 * 60 * 60); // 7 days in seconds
 
+//       // Derive PDA for savings account
+//       const [savingsAccountPDA] = PublicKey.findProgramAddressSync(
+//         [
+//           Buffer.from(name),
+//           payer.publicKey.toBuffer(),
+//           Buffer.from(description)
+//         ],
+//         program.programId
+//       );
 
+//       // Initialize savings account
+//       await program.methods
+//         .initializeSavings(
+//           name,
+//           description,
+//           { timeLockedSavings: {} },
+//           true, // is_sol
+//           amount,
+//           lockDuration,
+//           null // unlock_price
+//         )
+//         .accounts({
+//           signer: payer.publicKey,
+//         //   systemProgram: SystemProgram.programId,
+//         })
+//         .signers([payer])
+//         .rpc();
 
-//   async function createInstruction(
-//     client: BanksClient,
-//     payer: Keypair,
-//     instruction: TransactionInstruction,
-//     additionSigners: Keypair[] = []
-//   ): Promise<BanksTransactionResultWithMeta> {
-//     const tx = new Transaction();
-//     const [latestBlockhash] = await client.getLatestBlockhash();
-//     tx.recentBlockhash = latestBlockhash;
-//     tx.add(instruction);
-//     tx.feePayer = payer.publicKey;
-//     tx.sign(payer, ...additionSigners);
-//     return await client.tryProcessTransaction(tx);
-//   }
+//       // Fetch and verify the initialized savings account
+//       const savingsAccount = await program.account.savingsAccount.fetch(savingsAccountPDA);
+      
+//       assert.equal(savingsAccount.name, name);
+//       assert.equal(savingsAccount.description, description);
+//       assert.equal(savingsAccount.amount.toString(), amount.toString());
+//       assert.equal(savingsAccount.owner.toString(), payer.publicKey.toString());
+//       assert.equal(savingsAccount.isSol, true);
+//       assert.equal(savingsAccount.lockDuration.toString(), lockDuration.toString());
+//     //   assert(savingsAccount.createdAt > 0);
+//     });
 
-//   it("Initialize Protocol", async () => {
-//     Add your test here.     
-//     console.log("testing one, two three")
- 
+//     it("initializes a price-locked savings account", async () => {
+//       const name = "Price Lock";
+//       const description = "Price Locked Savings";
+//       const amount = new anchor.BN(1_000_000);
+//       const unlockPrice = new anchor.BN(2_000); // Example price target
+
+//       // Derive PDA for savings account
+//       const [savingsAccountPDA] = PublicKey.findProgramAddressSync(
+//         [
+//           Buffer.from(name),
+//           payer.publicKey.toBuffer(),
+//           Buffer.from(description)
+//         ],
+//         program.programId
+//       );
+
+//       // Initialize savings account
+//       await program.methods
+//         .initializeSavings(
+//           name,
+//           description,
+//           { priceLockedSavings: {} },
+//           false, // is_sol (using USDC)
+//           amount,
+//           null, // lock_duration
+//           unlockPrice
+//         )
+//         .accounts({
+//           signer: payer.publicKey,
+//         //   savingsAccount: savingsAccountPDA,
+//         //   systemProgram: SystemProgram.programId,
+//         })
+//         .signers([payer])
+//         .rpc();
+
+//       // Fetch and verify the initialized savings account
+//       const savingsAccount = await program.account.savingsAccount.fetch(savingsAccountPDA);
+      
+//       assert.equal(savingsAccount.name, name);
+//       assert.equal(savingsAccount.description, description);
+//       assert.equal(savingsAccount.amount.toString(), amount.toString());
+//       assert.equal(savingsAccount.owner.toString(), payer.publicKey.toString());
+//       assert.equal(savingsAccount.isSol, false);
+//       assert.equal(savingsAccount.unlockPrice.toString(), unlockPrice.toString());
+//       assert.equal(savingsAccount.lockDuration.toString(), "0");
+//     //   assert(savingsAccount.createdAt > 0);
+//     });
 //   });
 // });

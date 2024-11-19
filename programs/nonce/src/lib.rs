@@ -17,7 +17,7 @@ pub mod nonce {
     use super::*;
 
     pub fn initialize_protocol(ctx: Context<InitProtocolVault>) -> Result<()> {
-        initialize_protocol(ctx);
+        initialize_protocols(ctx);
         Ok(())
     }
 

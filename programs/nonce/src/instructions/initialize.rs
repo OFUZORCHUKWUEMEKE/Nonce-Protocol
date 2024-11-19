@@ -9,12 +9,12 @@ use anchor_spl::{associated_token::get_associated_token_address, token_interface
 
 #[derive(Accounts)]
 pub struct InitProtocolVault<'info> {
-    #[account(mut)]
-    pub signer: Signer<'info>,
     pub mint: InterfaceAccount<'info, Mint>,
+    #[account(mut)]
+    pub payer: Signer<'info>,
     #[account(
         init,
-        payer=signer,
+        payer=payer,
         space= DISCRIMINATOR + ProtocolVault::INIT_SPACE,
         seeds=[b"protocol"],
         bump
@@ -30,8 +30,6 @@ pub struct InitProtocolVault<'info> {
         token::authority = protocol_sol_vault,
     )]
     pub protocol_usdc_vault: InterfaceAccount<'info, token_interface::TokenAccount>,
-    #[account(mut)]
-    pub payer: Signer<'info>,
     pub token_program: Interface<'info, token_interface::TokenInterface>,
     pub system_program: Program<'info, System>,
 }
@@ -43,13 +41,12 @@ pub struct InitializeSavings<'info> {
     pub signer: Signer<'info>,
     #[account(
         init,
-        seeds=[name.as_bytes(),signer.key().as_ref(),description.as_bytes(), savings_type.try_to_vec()?.as_slice()],
+        seeds=[name.as_bytes(),signer.key().as_ref(),description.as_bytes()],
         bump,
         payer=signer,
         space=DISCRIMINATOR + SavingsAccount::INIT_SPACE
     )]
     pub savings_account: Account<'info, SavingsAccount>,
-    pub token_program: Interface<'info, token_interface::TokenInterface>,
     pub system_program: Program<'info, System>,
 }
 
@@ -90,12 +87,13 @@ pub fn initialize(
     Ok(())
 }
 
-pub fn initialize_protocol(ctx: Context<InitProtocolVault>) -> Result<()> {
+pub fn initialize_protocols(ctx: Context<InitProtocolVault>) -> Result<()> {
     let protocol_vault = &mut ctx.accounts.protocol_sol_vault;
-    protocol_vault.authority = ctx.accounts.signer.key();
+    protocol_vault.authority = ctx.accounts.payer.key();
     protocol_vault.total_sol_saved = 0;
     protocol_vault.total_usdc_saved = 0;
     protocol_vault.last_updated = Clock::get()?.unix_timestamp;
+    protocol_vault.bump = ctx.bumps.protocol_sol_vault;
 
     Ok(())
 }
