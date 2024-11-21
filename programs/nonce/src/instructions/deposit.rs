@@ -32,11 +32,6 @@ pub struct Deposit<'info> {
     pub protocol_sol_vault: Account<'info, ProtocolVault>,
     #[account(
         mut,
-        seeds=[b"AUTH"],
-        bump,
-        token::mint = mint,
-        token::token_program = token_program,
-        token::authority = protocol_sol_vault,
     )]
     pub protocol_usdc_vault: InterfaceAccount<'info, token_interface::TokenAccount>,
     // pub usdc_mint: InterfaceAccount<'info, Mint>,

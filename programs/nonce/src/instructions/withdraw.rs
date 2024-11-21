@@ -42,8 +42,6 @@ pub struct Withdraw<'info> {
     pub user_ata: InterfaceAccount<'info, TokenAccount>,
     #[account(
         mut,
-        seeds=[b"AUTH"],
-        bump,
         token::mint = mint,
         token::token_program = token_program,
         token::authority = protocol_sol_vault,

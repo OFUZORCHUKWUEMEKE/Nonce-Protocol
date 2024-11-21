@@ -23,8 +23,6 @@ pub struct InitProtocolVault<'info> {
     pub protocol_sol_vault: Account<'info, ProtocolVault>,
     #[account(
         init,
-        seeds=[b"protocol"],
-        bump,
         payer=payer,
         token::mint = mint,
         token::token_program = token_program,

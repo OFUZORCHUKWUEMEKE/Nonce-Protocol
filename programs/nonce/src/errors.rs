@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
 #[error_code]
-pub enum NonceError{
+pub enum NonceError {
     #[msg("Savings account is inactive")]
     SavingsInactive,
     #[msg("Funds are still Locked")]
@@ -13,5 +13,5 @@ pub enum NonceError{
     #[msg("Mathematical Overflow")]
     Overflow,
     #[msg("USD Price not yet reached")]
-    PriceNotReached
+    PriceNotReached,
 }
