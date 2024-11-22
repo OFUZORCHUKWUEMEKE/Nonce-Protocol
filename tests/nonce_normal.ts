@@ -30,7 +30,7 @@ describe("Nonce Testing", () => {
             connection,
             provider.publicKey,
             1 * LAMPORTS_PER_SOL,
-            0.5 * LAMPORTS_PER_SOL
+            0.5 * LAMPORTS_PER_SOL    
         );
 
         usdcMint = await createMint(

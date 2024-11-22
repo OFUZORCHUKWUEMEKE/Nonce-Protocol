@@ -44,6 +44,10 @@ pub mod nonce {
         Ok(())
     }
 
+    /**
+     * @deposit Deposit SOL and USDC 
+     */
+
     pub fn deposit(
         ctx: Context<Deposit>,
         name: String,
