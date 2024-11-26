@@ -28,7 +28,9 @@ pub struct Deposit<'info> {
         seeds=[b"vault",signer.key().as_ref()],
         bump
     )]
-    pub token_vault_program: InterfaceAccount<'info, token_interface::TokenAccount>,
+    pub token_vault_account: InterfaceAccount<'info, token_interface::TokenAccount>,
+    #[account(mut)]
+    pub protocol_state: Account<'info, ProtocolState>,
     pub mint: InterfaceAccount<'info, Mint>,
     #[account(
         mut,
@@ -52,6 +54,8 @@ pub fn deposit_handler(
     unlock_price: Option<u64>,
 ) -> Result<()> {
     let vault_sol_account = &mut ctx.accounts.savings_account;
+    let protocol_state = &mut ctx.accounts.protocol_state;
+    // let savings_account = &mut ctx.accounts.savings_account;
     match savings_type {
         SavingsType::TimeLockedSavings => {
             if is_sol == true {
@@ -64,11 +68,11 @@ pub fn deposit_handler(
                 );
 
                 anchor_lang::system_program::transfer(cpi_ctx, amount);
-                vault_sol_account.total_sol_saved += amount;
+                protocol_state.total_sol_saved.checked_add(amount);
             } else {
                 let transfer_cpi_accounts = TransferChecked {
                     from: ctx.accounts.user_ata.to_account_info(),
-                    to: ctx.accounts.protocol_usdc_vault.to_account_info(),
+                    to: ctx.accounts.token_vault_account.to_account_info(),
                     authority: ctx.accounts.signer.to_account_info(),
                     mint: ctx.accounts.mint.to_account_info(),
                 };
@@ -77,7 +81,7 @@ pub fn deposit_handler(
                 let decimals = ctx.accounts.mint.decimals;
 
                 token_interface::transfer_checked(cpi_ctx, amount, decimals)?;
-                vault_sol_account.total_usdc_saved += amount;
+                protocol_state.total_usdc_saved.checked_add(amount);
             }
         }
         _ => {
@@ -90,11 +94,11 @@ pub fn deposit_handler(
                     },
                 );
                 anchor_lang::system_program::transfer(cpi_ctx, amount);
-                vault_sol_account.total_sol_saved += amount;
+                protocol_state.total_sol_saved.checked_add(amount);
             } else {
                 let transfer_cpi_accounts = TransferChecked {
                     from: ctx.accounts.user_ata.to_account_info(),
-                    to: ctx.accounts.protocol_usdc_vault.to_account_info(),
+                    to: ctx.accounts.token_vault_account.to_account_info(),
                     authority: ctx.accounts.signer.to_account_info(),
                     mint: ctx.accounts.mint.to_account_info(),
                 };
@@ -103,7 +107,7 @@ pub fn deposit_handler(
                 let decimals = ctx.accounts.mint.decimals;
 
                 token_interface::transfer_checked(cpi_ctx, amount, decimals)?;
-                vault_sol_account.total_usdc_saved += amount;
+                protocol_state.total_usdc_saved.checked_add(amount);
             }
             println!("PriceLocked");
         }

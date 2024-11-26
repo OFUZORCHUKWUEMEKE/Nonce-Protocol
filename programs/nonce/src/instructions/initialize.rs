@@ -7,32 +7,6 @@ use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{Mint, TokenInterface};
 use anchor_spl::{associated_token::get_associated_token_address, token_interface};
 
-// #[derive(Accounts)]
-// pub struct InitProtocolVault<'info> {
-//     pub mint: InterfaceAccount<'info, Mint>,
-//     #[account(mut)]
-//     pub payer: Signer<'info>,
-//     #[account(
-//         init_if,
-//         payer=payer,
-//         has_one=payer,
-//         space= DISCRIMINATOR + ProtocolVault::INIT_SPACE,
-//         seeds=[b"protocol"],
-//         bump
-//     )]
-//     pub protocol_sol_vault: Account<'info, ProtocolVault>,
-//     #[account(
-//         init,
-//         payer=payer,
-//         token::mint = mint,
-//         token::token_program = token_program,
-//         token::authority = protocol_sol_vault,
-//     )]
-//     pub protocol_usdc_vault: InterfaceAccount<'info, token_interface::TokenAccount>,
-//     pub token_program: Interface<'info, token_interface::TokenInterface>,
-//     pub system_program: Program<'info, System>,
-// }
-
 #[derive(Accounts)]
 #[instruction(name:String,description:String,savings_type:SavingsType,is_sol:bool)]
 pub struct InitializeSavings<'info> {
@@ -60,8 +34,8 @@ pub struct InitializeSavings<'info> {
         payer=signer,
         token::authority= savings_account,
         token::mint = mint,
-        seeds=[b"vault",signer.key().as_ref()],
-        bump
+        seeds=[b"vault",savings_account.key().as_ref()],
+        bump,
     )]
     pub token_vault_account: InterfaceAccount<'info, token_interface::TokenAccount>,
     pub token_program: Interface<'info, token_interface::TokenInterface>,
