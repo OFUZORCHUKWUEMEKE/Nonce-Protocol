@@ -53,15 +53,25 @@ pub fn withdraw(
     unlock_price: Option<u64>,
     lock_duration: Option<i64>,
 ) -> Result<()> {
-    let savings_account = &mut ctx.accounts.savings_account;
+    let savings_account = &ctx.accounts.savings_account;
     let price_update = &mut ctx.accounts.price_update;
-    let signer_account = &mut ctx.accounts.signer;
+
     let name_bytes = savings_account.name.as_bytes();
     let description_bytes = savings_account.description.as_bytes();
-    let signer_key_bytes = signer_account.key.as_ref();
+
     let bump_bytes = &[savings_account.bump];
 
-    let signer_seeds = &[name_bytes, signer_key_bytes, description_bytes, bump_bytes];
+    let seeds = &[
+        ctx.accounts.savings_account.name.as_bytes(),
+        ctx.accounts.signer.to_account_info().key.as_ref(),
+        ctx.accounts.savings_account.description.as_bytes(),
+        &[ctx.accounts.savings_account.bump],
+    ];
+    let signer_seeds = [&seeds[..]];
+    let signer_account = &mut ctx.accounts.signer;
+    let signer_key_bytes = signer_account.key.as_ref();
+
+    // let signer_seeds = &[name_bytes, signer_key_bytes, description_bytes, bump_bytes];
 
     match savings_account.savings_type {
         SavingsType::PriceLockedSavings => {
@@ -80,7 +90,7 @@ pub fn withdraw(
                             from: savings_account.to_account_info(),
                             to: signer_account.to_account_info(),
                         },
-                        &[signer_seeds],
+                        &signer_seeds,
                     );
                     anchor_lang::system_program::transfer(cpi_ctx, amount)?;
                 } else {
@@ -104,8 +114,8 @@ pub fn withdraw(
                         authority: savings_account.to_account_info(),
                         mint: ctx.accounts.mint.to_account_info(),
                     };
-                    let ctx = CpiContext::new(cpi_program, transfer_accounts)
-                        .with_signer(&[signer_seeds]);
+                    let ctx =
+                        CpiContext::new(cpi_program, transfer_accounts).with_signer(&signer_seeds);
                     token_interface::transfer_checked(ctx, amount, decimals)?;
                 }
             }
@@ -120,7 +130,7 @@ pub fn withdraw(
                             from: savings_account.to_account_info(),
                             to: signer_account.to_account_info(),
                         },
-                        &[signer_seeds],
+                        &signer_seeds,
                     );
 
                     anchor_lang::system_program::transfer(cpi_ctx, amount)?;
@@ -138,11 +148,8 @@ pub fn withdraw(
                         authority: savings_account.to_account_info(),
                         mint: ctx.accounts.mint.to_account_info(),
                     };
-                    let ctx = CpiContext::new_with_signer(
-                        cpi_program,
-                        transfer_accounts,
-                        &[signer_seeds],
-                    );
+                    let ctx =
+                        CpiContext::new_with_signer(cpi_program, transfer_accounts, &signer_seeds);
                     token_interface::transfer_checked(ctx, amount, decimals)?;
                 } else {
                     return Err(NonceError::FundsStillLocked.into());
