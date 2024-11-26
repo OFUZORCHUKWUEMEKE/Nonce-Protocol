@@ -54,7 +54,7 @@ pub mod nonce {
         time_lock: Option<i64>,
         unlock_price: Option<u64>,
     ) -> Result<()> {
-        deposit(
+        deposit_handler(
             ctx,
             name,
             description,
@@ -73,7 +73,7 @@ pub mod nonce {
         unlock_price: Option<u64>,
         lock_duration: Option<i64>,
     ) -> Result<()> {
-        withdraw(ctx, amount, unlock_price, lock_duration);
+        withdraw_handler(ctx, amount, unlock_price, lock_duration);
         Ok(())
     }
 }

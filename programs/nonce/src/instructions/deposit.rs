@@ -5,9 +5,9 @@ use crate::{
 };
 use anchor_lang::prelude::*;
 use anchor_spl::{
-    associated_token::{get_associated_token_address, AssociatedToken},
+    associated_token::{AssociatedToken},
     token::{self, Token},
-    token_interface::{self, Mint, TokenAccount, TokenInterface, TransferChecked},
+    token_interface::{self, Mint, TokenAccount, TransferChecked},
 };
 
 // Nice One Bro God will Help You

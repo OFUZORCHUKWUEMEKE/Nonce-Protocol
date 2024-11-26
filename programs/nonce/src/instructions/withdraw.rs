@@ -6,7 +6,7 @@ use crate::{
 };
 use anchor_lang::prelude::*;
 use anchor_spl::{
-    associated_token::{get_associated_token_address, AssociatedToken},
+    associated_token::AssociatedToken,
     token_interface::{self, Mint, TokenAccount, TransferChecked},
 };
 use pyth_solana_receiver_sdk::price_update::{get_feed_id_from_hex, PriceUpdateV2};
@@ -47,7 +47,7 @@ pub struct Withdraw<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn withdraw(
+pub fn withdraw_handler(
     ctx: Context<Withdraw>,
     amount: u64,
     unlock_price: Option<u64>,
@@ -55,11 +55,6 @@ pub fn withdraw(
 ) -> Result<()> {
     let savings_account = &ctx.accounts.savings_account;
     let price_update = &mut ctx.accounts.price_update;
-
-    let name_bytes = savings_account.name.as_bytes();
-    let description_bytes = savings_account.description.as_bytes();
-
-    let bump_bytes = &[savings_account.bump];
 
     let seeds = &[
         ctx.accounts.savings_account.name.as_bytes(),
@@ -69,7 +64,6 @@ pub fn withdraw(
     ];
     let signer_seeds = [&seeds[..]];
     let signer_account = &mut ctx.accounts.signer;
-    let signer_key_bytes = signer_account.key.as_ref();
 
     // let signer_seeds = &[name_bytes, signer_key_bytes, description_bytes, bump_bytes];
 
@@ -106,7 +100,6 @@ pub fn withdraw(
                 let final_amount = (usdc_price.price as u64).checked_mul(amount);
                 if final_amount.unwrap() >= unlock_price.unwrap() {
                     let cpi_program = ctx.accounts.token_program.to_account_info();
-                    let mint_key = ctx.accounts.mint.key();
                     let decimals = ctx.accounts.mint.decimals;
                     let transfer_accounts = TransferChecked {
                         from: ctx.accounts.token_vault_account.to_account_info(),
