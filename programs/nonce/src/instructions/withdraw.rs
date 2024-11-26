@@ -2,6 +2,7 @@ use crate::{
     constants::*,
     errors::NonceError,
     state::{SavingsAccount, SavingsType},
+    ProtocolState,
 };
 use anchor_lang::prelude::*;
 use anchor_spl::{
@@ -54,10 +55,14 @@ pub fn withdraw(
 ) -> Result<()> {
     let savings_account = &mut ctx.accounts.savings_account;
     let price_update = &mut ctx.accounts.price_update;
-    let protocol_state = &mut ctx.accounts.protocol_state;
-    let token_vault = &mut ctx.accounts.token_vault_account;
-    let protocol_state = &mut ctx.accounts.protocol_state;
-    // let unlock_price = savings_account
+    let signer_account = &mut ctx.accounts.signer;
+    let name_bytes = savings_account.name.as_bytes();
+    let description_bytes = savings_account.description.as_bytes();
+    let signer_key_bytes = signer_account.key.as_ref();
+    let bump_bytes = &[savings_account.bump];
+
+    let signer_seeds = &[name_bytes, signer_key_bytes, description_bytes, bump_bytes];
+
     match savings_account.savings_type {
         SavingsType::PriceLockedSavings => {
             if savings_account.is_sol == true {
@@ -69,20 +74,14 @@ pub fn withdraw(
                 )?;
                 let final_amount = (sol_price.price as u64).checked_mul(amount);
                 if final_amount.unwrap() >= unlock_price.unwrap() {
-                    let signer_seeds = &[
-                        savings_account.name.as_bytes(),
-                        ctx.accounts.signer.key().as_ref(),
-                        savings_account.description.as_bytes(),
-                        &[savings_account.bump],
-                    ];
-                    let cpi_ctx = CpiContext::new(
+                    let cpi_ctx = CpiContext::new_with_signer(
                         ctx.accounts.system_program.to_account_info(),
                         anchor_lang::system_program::Transfer {
-                            from: ctx.accounts.savings_account.to_account_info(),
-                            to: ctx.accounts.signer.to_account_info(),
+                            from: savings_account.to_account_info(),
+                            to: signer_account.to_account_info(),
                         },
-                    )
-                    .with_signer(&[signer_seeds]);
+                        &[signer_seeds],
+                    );
                     anchor_lang::system_program::transfer(cpi_ctx, amount)?;
                 } else {
                     return Err(NonceError::PriceNotReached.into());
@@ -96,19 +95,13 @@ pub fn withdraw(
                 )?;
                 let final_amount = (usdc_price.price as u64).checked_mul(amount);
                 if final_amount.unwrap() >= unlock_price.unwrap() {
-                    let signer_seeds = &[
-                        savings_account.name.as_bytes(),
-                        ctx.accounts.signer.key().as_ref(),
-                        savings_account.description.as_bytes(),
-                        &[savings_account.bump],
-                    ];
                     let cpi_program = ctx.accounts.token_program.to_account_info();
                     let mint_key = ctx.accounts.mint.key();
                     let decimals = ctx.accounts.mint.decimals;
                     let transfer_accounts = TransferChecked {
                         from: ctx.accounts.token_vault_account.to_account_info(),
                         to: ctx.accounts.user_ata.to_account_info(),
-                        authority: ctx.accounts.savings_account.to_account_info(),
+                        authority: savings_account.to_account_info(),
                         mint: ctx.accounts.mint.to_account_info(),
                     };
                     let ctx = CpiContext::new(cpi_program, transfer_accounts)
@@ -121,20 +114,15 @@ pub fn withdraw(
             if savings_account.is_sol == true {
                 let current_timestamp = Clock::get()?.unix_timestamp;
                 if current_timestamp >= savings_account.created_at + lock_duration.unwrap() {
-                    let signer_seeds = &[
-                        savings_account.name.as_bytes(),
-                        ctx.accounts.signer.key().as_ref(),
-                        savings_account.description.as_bytes(),
-                        &[savings_account.bump],
-                    ];
-                    let cpi_ctx = CpiContext::new(
+                    let cpi_ctx = CpiContext::new_with_signer(
                         ctx.accounts.system_program.to_account_info(),
                         anchor_lang::system_program::Transfer {
-                            from: ctx.accounts.savings_account.to_account_info(),
-                            to: ctx.accounts.signer.to_account_info(),
+                            from: savings_account.to_account_info(),
+                            to: signer_account.to_account_info(),
                         },
-                    )
-                    .with_signer(&[signer_seeds]);
+                        &[signer_seeds],
+                    );
+
                     anchor_lang::system_program::transfer(cpi_ctx, amount)?;
                 } else {
                     return Err(NonceError::FundsStillLocked.into());
@@ -142,22 +130,19 @@ pub fn withdraw(
             } else {
                 let current_timestamp = Clock::get()?.unix_timestamp;
                 if current_timestamp >= savings_account.created_at + lock_duration.unwrap() {
-                    let signer_seeds = &[
-                        savings_account.name.as_bytes(),
-                        ctx.accounts.signer.key().as_ref(),
-                        savings_account.description.as_bytes(),
-                        &[savings_account.bump],
-                    ];
                     let cpi_program = ctx.accounts.token_program.to_account_info();
                     let decimals = ctx.accounts.mint.decimals;
                     let transfer_accounts = TransferChecked {
                         from: ctx.accounts.token_vault_account.to_account_info(),
                         to: ctx.accounts.user_ata.to_account_info(),
-                        authority: ctx.accounts.savings_account.to_account_info(),
+                        authority: savings_account.to_account_info(),
                         mint: ctx.accounts.mint.to_account_info(),
                     };
-                    let ctx =
-                        CpiContext::new(cpi_program, transfer_accounts).with_signer(&[signer_seeds]);
+                    let ctx = CpiContext::new_with_signer(
+                        cpi_program,
+                        transfer_accounts,
+                        &[signer_seeds],
+                    );
                     token_interface::transfer_checked(ctx, amount, decimals)?;
                 } else {
                     return Err(NonceError::FundsStillLocked.into());

@@ -11,16 +11,9 @@ declare_id!("4srKoX2V92mmfDVDGVHzTEw19Tku3uSoBxiER8isVzd7");
 
 #[program]
 pub mod nonce {
-    use instructions::InitProtocolVault;
     use state::SavingsType;
 
     use super::*;
-
-    pub fn initialize_protocol(ctx: Context<InitProtocolVault>) -> Result<()> {
-        initialize_protocols(ctx);
-        Ok(())
-    }
-
     /**
      * @Initialize Initialize Savings Account
      */
@@ -48,7 +41,7 @@ pub mod nonce {
     }
 
     /**
-     * @deposit Deposit SOL and USDC 
+     * @deposit Deposit SOL and USDC
      */
 
     pub fn deposit(
@@ -74,8 +67,6 @@ pub mod nonce {
         Ok(())
     }
 
-
-    
     pub fn withdraw(
         ctx: Context<Withdraw>,
         amount: u64,
