@@ -1,7 +1,7 @@
 use crate::{
     constants::*,
     errors::*,
-    state::{ProtocolVault, SavingsAccount, SavingsType},
+    state::{ProtocolState, SavingsAccount, SavingsType},
 };
 use anchor_lang::prelude::*;
 use anchor_spl::{
@@ -23,29 +23,17 @@ pub struct Deposit<'info> {
         bump= savings_account.bump
     )]
     pub savings_account: Account<'info, SavingsAccount>,
+    #[account(
+        mut,
+        seeds=[b"vault",signer.key().as_ref()],
+        bump
+    )]
+    pub token_vault_program: InterfaceAccount<'info, token_interface::TokenAccount>,
     pub mint: InterfaceAccount<'info, Mint>,
     #[account(
         mut,
-        seeds=[b"protocol"],
-        bump
-    )]
-    pub protocol_sol_vault: Account<'info, ProtocolVault>,
-    #[account(
-        mut,
-    )]
-    pub protocol_usdc_vault: InterfaceAccount<'info, token_interface::TokenAccount>,
-    // pub usdc_mint: InterfaceAccount<'info, Mint>,
-    #[account(
-        init_if_needed,
-        payer = signer,
         associated_token::mint = mint,
-        associated_token::authority = signer,
-        constraint = if !is_sol{
-            let ata = get_associated_token_address(&signer.key(),&mint.key());
-            user_ata.key() == ata
-        }else{
-            true
-        }
+        associated_token::authority = signer
     )]
     pub user_ata: InterfaceAccount<'info, TokenAccount>,
     pub token_program: Interface<'info, token_interface::TokenInterface>,
@@ -63,7 +51,7 @@ pub fn deposit_handler(
     time_lock: Option<i64>,
     unlock_price: Option<u64>,
 ) -> Result<()> {
-    let vault_sol_account = &mut ctx.accounts.protocol_sol_vault;
+    let vault_sol_account = &mut ctx.accounts.savings_account;
     match savings_type {
         SavingsType::TimeLockedSavings => {
             if is_sol == true {

@@ -1,43 +1,52 @@
 use crate::{
     constants::*,
     errors::*,
-    state::{ProtocolVault, SavingsAccount, SavingsType},
+    state::{ProtocolState, SavingsAccount, SavingsType},
 };
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{Mint, TokenInterface};
 use anchor_spl::{associated_token::get_associated_token_address, token_interface};
 
-#[derive(Accounts)]
-pub struct InitProtocolVault<'info> {
-    pub mint: InterfaceAccount<'info, Mint>,
-    #[account(mut)]
-    pub payer: Signer<'info>,
-    #[account(
-        init,
-        payer=payer,
-        has_one=payer,
-        space= DISCRIMINATOR + ProtocolVault::INIT_SPACE,
-        seeds=[b"protocol"],
-        bump
-    )]
-    pub protocol_sol_vault: Account<'info, ProtocolVault>,
-    #[account(
-        init,
-        payer=payer,
-        token::mint = mint,
-        token::token_program = token_program,
-        token::authority = protocol_sol_vault,
-    )]
-    pub protocol_usdc_vault: InterfaceAccount<'info, token_interface::TokenAccount>,
-    pub token_program: Interface<'info, token_interface::TokenInterface>,
-    pub system_program: Program<'info, System>,
-}
+// #[derive(Accounts)]
+// pub struct InitProtocolVault<'info> {
+//     pub mint: InterfaceAccount<'info, Mint>,
+//     #[account(mut)]
+//     pub payer: Signer<'info>,
+//     #[account(
+//         init_if,
+//         payer=payer,
+//         has_one=payer,
+//         space= DISCRIMINATOR + ProtocolVault::INIT_SPACE,
+//         seeds=[b"protocol"],
+//         bump
+//     )]
+//     pub protocol_sol_vault: Account<'info, ProtocolVault>,
+//     #[account(
+//         init,
+//         payer=payer,
+//         token::mint = mint,
+//         token::token_program = token_program,
+//         token::authority = protocol_sol_vault,
+//     )]
+//     pub protocol_usdc_vault: InterfaceAccount<'info, token_interface::TokenAccount>,
+//     pub token_program: Interface<'info, token_interface::TokenInterface>,
+//     pub system_program: Program<'info, System>,
+// }
 
 #[derive(Accounts)]
 #[instruction(name:String,description:String,savings_type:SavingsType,is_sol:bool)]
 pub struct InitializeSavings<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
+    pub mint: InterfaceAccount<'info, Mint>,
+    #[account(
+        init_if_needed,
+        seeds=[b"protocol"],
+        payer=signer,
+        space=DISCRIMINATOR + ProtocolState::INIT_SPACE,
+        bump
+    )]
+    pub protocol_account: Account<'info, ProtocolState>,
     #[account(
         init,
         seeds=[name.as_bytes(),signer.key().as_ref(),description.as_bytes()],
@@ -46,6 +55,16 @@ pub struct InitializeSavings<'info> {
         space=DISCRIMINATOR + SavingsAccount::INIT_SPACE
     )]
     pub savings_account: Account<'info, SavingsAccount>,
+    #[account(
+        init_if_needed,
+        payer=signer,
+        token::authority= savings_account,
+        token::mint = mint,
+        seeds=[b"vault",signer.key().as_ref()],
+        bump
+    )]
+    pub token_vault_account: InterfaceAccount<'info, token_interface::TokenAccount>,
+    pub token_program: Interface<'info, token_interface::TokenInterface>,
     pub system_program: Program<'info, System>,
 }
 
@@ -86,13 +105,13 @@ pub fn initialize(
     Ok(())
 }
 
-pub fn initialize_protocols(ctx: Context<InitProtocolVault>) -> Result<()> {
-    let protocol_vault = &mut ctx.accounts.protocol_sol_vault;
-    protocol_vault.payer = ctx.accounts.payer.key();
-    protocol_vault.total_sol_saved = 0;
-    protocol_vault.total_usdc_saved = 0;
-    protocol_vault.last_updated = Clock::get()?.unix_timestamp;
-    protocol_vault.bump = ctx.bumps.protocol_sol_vault;
+// pub fn initialize_protocols(ctx: Context<InitProtocolVault>) -> Result<()> {
+//     let protocol_vault = &mut ctx.accounts.protocol_sol_vault;
+//     protocol_vault.payer = ctx.accounts.payer.key();
+//     protocol_vault.total_sol_saved = 0;
+//     protocol_vault.total_usdc_saved = 0;
+//     protocol_vault.last_updated = Clock::get()?.unix_timestamp;
+//     protocol_vault.bump = ctx.bumps.protocol_sol_vault;
 
-    Ok(())
-}
+//     Ok(())
+// }

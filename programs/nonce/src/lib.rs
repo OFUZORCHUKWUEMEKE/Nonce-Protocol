@@ -21,6 +21,9 @@ pub mod nonce {
         Ok(())
     }
 
+    /**
+     * @Initialize Initialize Savings Account
+     */
     pub fn initialize_savings(
         ctx: Context<InitializeSavings>,
         name: String,
@@ -71,6 +74,8 @@ pub mod nonce {
         Ok(())
     }
 
+
+    
     pub fn withdraw(
         ctx: Context<Withdraw>,
         amount: u64,
