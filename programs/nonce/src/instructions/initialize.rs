@@ -83,9 +83,24 @@ pub fn initialize(
 
 #[cfg(test)]
 mod test {
+    use super::*;
     use litesvm::LiteSVM;
     use solana_program::{message::Message, pubkey::Pubkey, system_instruction::transfer};
     use solana_sdk::{signature::Keypair, signer::Signer, transaction::Transaction};
+
+    async fn create_savimgs_account(
+        program:&Program<InitializeSavings>,
+        signer:&Keypair,
+        name:String,
+        description:String,
+        savings_type:SavingsType,
+        is_sol: bool,
+        lock_duration:Option<i64>,
+        unlock_price: Option<u64>
+        
+    ){
+
+    }
 
     #[test]
     fn testing() {
@@ -103,11 +118,16 @@ mod test {
             svm.latest_blockhash(),
         );
         let tx_res = svm.send_transaction(tx).unwrap();
-        println!("{:?}",tx_res);
+        println!("{:?}", tx_res);
 
         let from_account = svm.get_account(&from);
         let to_account = svm.get_account(&to);
         assert_eq!(from_account.unwrap().lamports, 4936);
         assert_eq!(to_account.unwrap().lamports, 64);
+    }
+
+    #[test]
+    fn initialize() {
+
     }
 }
