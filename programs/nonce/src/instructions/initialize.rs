@@ -88,20 +88,6 @@ mod test {
     use solana_program::{message::Message, pubkey::Pubkey, system_instruction::transfer};
     use solana_sdk::{signature::Keypair, signer::Signer, transaction::Transaction};
 
-    async fn create_savimgs_account(
-        program:&Program<InitializeSavings>,
-        signer:&Keypair,
-        name:String,
-        description:String,
-        savings_type:SavingsType,
-        is_sol: bool,
-        lock_duration:Option<i64>,
-        unlock_price: Option<u64>
-        
-    ){
-
-    }
-
     #[test]
     fn testing() {
         let from_keypair = Keypair::new();
@@ -127,7 +113,5 @@ mod test {
     }
 
     #[test]
-    fn initialize() {
-
-    }
+    fn initialize() {}
 }
