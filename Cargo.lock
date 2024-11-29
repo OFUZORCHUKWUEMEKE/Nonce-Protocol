@@ -271,7 +271,7 @@ dependencies = [
  "anchor-lang",
  "spl-associated-token-account",
  "spl-pod",
- "spl-token",
+ "spl-token 4.0.3",
  "spl-token-2022",
  "spl-token-group-interface",
  "spl-token-metadata-interface",
@@ -1930,6 +1930,19 @@ dependencies = [
  "solana-system-program",
  "solana-vote-program",
  "thiserror",
+]
+
+[[package]]
+name = "litesvm-token"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "785f7ccbc454efd59a5131ece996bc7cc0cef93368fcc77b0d54856b3d0f7595"
+dependencies = [
+ "litesvm",
+ "smallvec",
+ "solana-sdk 2.0.18",
+ "spl-associated-token-account-client",
+ "spl-token 6.0.0",
 ]
 
 [[package]]
@@ -3605,9 +3618,18 @@ dependencies = [
  "num-derive",
  "num-traits",
  "solana-program 1.18.26",
- "spl-token",
+ "spl-token 4.0.3",
  "spl-token-2022",
  "thiserror",
+]
+
+[[package]]
+name = "spl-associated-token-account-client"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0c5c1e2d53941ea7ebc4be3f86302a3c6c5178baa932bbc038468429e6900d36"
+dependencies = [
+ "solana-program 2.0.18",
 ]
 
 [[package]]
@@ -3722,6 +3744,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "spl-token"
+version = "6.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "70a0f06ac7f23dc0984931b1fe309468f14ea58e32660439c1cef19456f5d0e3"
+dependencies = [
+ "arrayref",
+ "bytemuck",
+ "num-derive",
+ "num-traits",
+ "num_enum",
+ "solana-program 2.0.18",
+ "thiserror",
+]
+
+[[package]]
 name = "spl-token-2022"
 version = "3.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3737,7 +3774,7 @@ dependencies = [
  "solana-zk-token-sdk",
  "spl-memo",
  "spl-pod",
- "spl-token",
+ "spl-token 4.0.3",
  "spl-token-group-interface",
  "spl-token-metadata-interface",
  "spl-transfer-hook-interface",
@@ -3908,6 +3945,7 @@ dependencies = [
  "anchor-lang",
  "anchor-spl",
  "litesvm",
+ "litesvm-token",
  "nonce",
  "pyth-solana-receiver-sdk",
  "solana-program 2.0.18",

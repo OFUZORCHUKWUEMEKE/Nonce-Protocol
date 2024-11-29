@@ -11,3 +11,5 @@ solana-sdk.workspace = true
 litesvm.workspace = true
 pyth-solana-receiver-sdk.workspace = true
 nonce.workspace = true
+litesvm-token = "0.3.0"
+
